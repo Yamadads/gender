@@ -1,9 +1,11 @@
 import sys
-import scipy.io.wavfile
 import wave
 import struct
+from scipy import signal
 import numpy as np
 from itertools import chain
+import matplotlib.pyplot as plt
+from copy import copy
 
 def readWaveFile(fileName):
     waveFile = wave.open(fileName,'r')
@@ -27,10 +29,35 @@ print (framerate)
 print (framesNumber)
 print (time)
 
-dataFFT = np.fft(data)
-absDataFFT = abs(dataFFT)
-maxAmplitude = np.amax(dataFFT)
+# data = data * signal.kaiser(framesNumber,100)
 
+dataFFT = np.fft.fft(data)
+absDataFFT = np.abs(dataFFT)
+maxAmplitude = np.amax(absDataFFT)
+spectrum = np.log(abs(np.fft.rfft(data)))
+print (maxAmplitude)
+
+spectrum = np.log(abs(np.fft.rfft(data)))
+hps = copy(spectrum)
+for h in np.arange(2, 6):
+  dec = signal.decimate(spectrum, h)
+  hps[:len(dec)] += dec
+duration = float(framesNumber) / framerate
+peak_start = 50 * duration
+peak = np.argmax(hps[peak_start:])
+fundamental = (peak_start + peak) / duration
+
+frequency = np.fft.fftfreq(framesNumber)
+# print(frequency.min(), frequency.max())
+index = np.argmax(absDataFFT)
+freq = frequency[index]
+freqHerz = abs(freq * framerate)
+print(freqHerz)
+print (fundamental)
+# print (frequency)
+# plt.plot(frequency)
+# plt.ylabel('some numbers')
+# plt.show()
 
 # if (waveFile.getnchannels()>1):
 #     speech = waveFile[0]
