@@ -8,11 +8,6 @@ import matplotlib.pyplot as plt
 from copy import copy
 from matplotlib.mlab import find
 
-def parabolic(f, x):
-    xv = 1/2. * (f[x-1] - f[x+1]) / (f[x-1] - 2 * f[x] + f[x+1]) + x
-    yv = f[x] - 1/4. * (f[x-1] - f[x+1]) * (xv - x)
-    return (xv, yv)
-
 def readWaveFile(fileName):
     waveFile = wave.open(fileName,'r')
     channels = waveFile.getnchannels()
@@ -27,41 +22,47 @@ def readWaveFile(fileName):
     waveFile.close()
     return oneChannelData, channels, sampwidth, framerate, framesNumber
 
-def getFreq(data, framesNumber):
-    data = data * signal.kaiser(framesNumber,100)
-    dataFFT = np.fft.fft(data)
-    absDataFFT = np.abs(dataFFT)
-    maxAmplitude = np.amax(absDataFFT)
-    frequency = np.fft.fftfreq(framesNumber)
-    # print(frequency.min(), frequency.max())
-    index = np.argmax(absDataFFT)
-    freq = frequency[index]
-    freqHerz = abs(freq * framerate)
-    print(freqHerz)
+# def freq_from_fft(sig, fs):
+#     """Estimate frequency from peak of FFT
+#
+#     """
+#     # Compute Fourier transform of windowed signal
+#     windowed = sig * signal.blackmanharris(len(sig))
+#     f = np.fft.rfft(windowed)
+#
+#     # Find the peak and interpolate to get a more accurate peak
+#     i = np.argmax(abs(f)) # Just use this for less-accurate, naive version
+#     true_i = np.parabolic(np.log(np.abs(f)), i)[0]
+#
+#     # Convert to equivalent frequency
+#     return fs * true_i / len(windowed)
 
-def freq_from_fft(sig, fs):
-    """Estimate frequency from peak of FFT
-
-    """
-    # Compute Fourier transform of windowed signal
-    windowed = sig * signal.blackmanharris(len(sig))
-    f = np.fft.rfft(windowed)
-
-    # Find the peak and interpolate to get a more accurate peak
-    i = np.argmax(abs(f)) # Just use this for less-accurate, naive version
-    true_i = parabolic(np.log(np.abs(f)), i)[0]
-
-    # Convert to equivalent frequency
-    return fs * true_i / len(windowed)
-
+# fileName = "train/001_K.wav"
 fileName = sys.argv[1]
-data, channels, sampwidth, framerate, framesNumber = readWaveFile(fileName)
+data, channels, sampwidth, sampling_rate, samples_count = readWaveFile(fileName)
 
-print (freq_from_fft(data,framerate))
+
+samples_count = len(data)
+x = np.linspace(0,samples_count,samples_count,endpoint=False)
+duration = float(samples_count) / sampling_rate
+# plt.subplot(211)
+# plt.plot(x[1000:1020],signal[1000:1020],'*')
+# plt.show()
+data = data * signal.kaiser(samples_count, 100)
+
+spectrum = np.log(abs(np.fft.rfft(data)))
+hps = copy(spectrum)
+for h in np.arange(2, 6):
+    dec = signal.decimate(spectrum, int(h))
+    hps[:len(dec)] += dec
+peak_start = 50 * duration
+peak = np.argmax(hps[peak_start:])
+fundamental = (peak_start + peak) / duration
+print(fundamental)
 # indices = find((data[1:] >= 0) & (data[:-1] < 0))
 # crossings = [i - data[i] / (data[i+1] - data[i]) for i in indices]
 # print (framerate / np.mean(np.diff(crossings)))
-time = framesNumber / framerate
+# time = framesNumber / framerate
 
 # print (len(data))
 # print (channels)
@@ -74,7 +75,12 @@ time = framesNumber / framerate
 # freq = freq_from_fft(data,framerate)
 # print (freq)
 
-
+#
+# data = data * signal.kaiser(framesNumber,100)
+#
+# dataFFT = np.fft.fft(data)
+# absDataFFT = np.abs(dataFFT)
+# maxAmplitude = np.amax(absDataFFT)
 # spectrum = np.log(np.abs(np.fft.rfft(data)))
 #
 # hps = copy(spectrum)
@@ -86,7 +92,12 @@ time = framesNumber / framerate
 # peak = np.argmax(hps[peak_start:])
 # fundamental = (peak_start + peak) / duration
 
-
+# frequency = np.fft.fftfreq(framesNumber)
+# print(frequency.min(), frequency.max())
+# index = np.argmax(absDataFFT)
+# freq = frequency[index]
+# freqHerz = abs(freq * framerate)
+# print(freqHerz)
 # print (fundamental)
 # print (frequency)
 # plt.plot(frequency)
@@ -141,3 +152,5 @@ time = framesNumber / framerate
 #
 #     print(samples_count)
 #     print(duration)
+
+
