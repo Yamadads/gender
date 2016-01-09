@@ -45,12 +45,12 @@ data, channels, sampwidth, framerate, framesNumber = readWaveFile(fileName)
 # print (framerate / np.mean(np.diff(crossings)))
 time = framesNumber / framerate
 
-print (len(data))
-print (channels)
-print (sampwidth)
-print (framerate)
-print (framesNumber)
-print (time)
+# print (len(data))
+# print (channels)
+# print (sampwidth)
+# print (framerate)
+# print (framesNumber)
+# print (time)
 
 
 # freq = freq_from_fft(data,framerate)
@@ -62,25 +62,25 @@ data = data * signal.kaiser(framesNumber,100)
 dataFFT = np.fft.fft(data)
 absDataFFT = np.abs(dataFFT)
 maxAmplitude = np.amax(absDataFFT)
-spectrum = np.log(np.abs(np.fft.rfft(data)))
-
-hps = copy(spectrum)
-for h in np.arange(2, 6):
-  dec = signal.decimate(spectrum, h)
-  hps[:len(dec)] += dec
-duration = float(framesNumber) / framerate
-peak_start = 50 * duration
-peak = np.argmax(hps[peak_start:])
-fundamental = (peak_start + peak) / duration
+# spectrum = np.log(np.abs(np.fft.rfft(data)))
+#
+# hps = copy(spectrum)
+# for h in np.arange(2, 6):
+#   dec = signal.decimate(spectrum, h)
+#   hps[:len(dec)] += dec
+# duration = float(framesNumber) / framerate
+# peak_start = 50 * duration
+# peak = np.argmax(hps[peak_start:])
+# fundamental = (peak_start + peak) / duration
 
 frequency = np.fft.fftfreq(framesNumber)
-print(frequency.min(), frequency.max())
+# print(frequency.min(), frequency.max())
 index = np.argmax(absDataFFT)
 freq = frequency[index]
 freqHerz = abs(freq * framerate)
 print(freqHerz)
-print (fundamental)
-print (frequency)
+# print (fundamental)
+# print (frequency)
 # plt.plot(frequency)
 # plt.ylabel('some numbers')
 # plt.show()
