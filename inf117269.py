@@ -6,6 +6,7 @@ import numpy as np
 from itertools import chain
 import matplotlib.pyplot as plt
 from copy import copy
+from matplotlib.mlab import find
 
 def readWaveFile(fileName):
     waveFile = wave.open(fileName,'r')
@@ -17,27 +18,52 @@ def readWaveFile(fileName):
     data = struct.unpack("%dh" %  channels*framesNumber, frames)
     oneChannelData = data[::channels]
     oneChannelData = list(chain(oneChannelData))
+    framesNumber = len(oneChannelData)
     waveFile.close()
-    return data, channels, sampwidth, framerate, framesNumber
+    return oneChannelData, channels, sampwidth, framerate, framesNumber
+
+# def freq_from_fft(sig, fs):
+#     """Estimate frequency from peak of FFT
+#
+#     """
+#     # Compute Fourier transform of windowed signal
+#     windowed = sig * signal.blackmanharris(len(sig))
+#     f = np.fft.rfft(windowed)
+#
+#     # Find the peak and interpolate to get a more accurate peak
+#     i = np.argmax(abs(f)) # Just use this for less-accurate, naive version
+#     true_i = np.parabolic(np.log(np.abs(f)), i)[0]
+#
+#     # Convert to equivalent frequency
+#     return fs * true_i / len(windowed)
 
 fileName = sys.argv[1]
 data, channels, sampwidth, framerate, framesNumber = readWaveFile(fileName)
+
+# indices = find((data[1:] >= 0) & (data[:-1] < 0))
+# crossings = [i - data[i] / (data[i+1] - data[i]) for i in indices]
+# print (framerate / np.mean(np.diff(crossings)))
 time = framesNumber / framerate
+
+print (len(data))
 print (channels)
 print (sampwidth)
 print (framerate)
 print (framesNumber)
 print (time)
 
-# data = data * signal.kaiser(framesNumber,100)
+
+# freq = freq_from_fft(data,framerate)
+# print (freq)
+
+#
+data = data * signal.kaiser(framesNumber,100)
 
 dataFFT = np.fft.fft(data)
 absDataFFT = np.abs(dataFFT)
 maxAmplitude = np.amax(absDataFFT)
-spectrum = np.log(abs(np.fft.rfft(data)))
-print (maxAmplitude)
+spectrum = np.log(np.abs(np.fft.rfft(data)))
 
-spectrum = np.log(abs(np.fft.rfft(data)))
 hps = copy(spectrum)
 for h in np.arange(2, 6):
   dec = signal.decimate(spectrum, h)
@@ -48,13 +74,13 @@ peak = np.argmax(hps[peak_start:])
 fundamental = (peak_start + peak) / duration
 
 frequency = np.fft.fftfreq(framesNumber)
-# print(frequency.min(), frequency.max())
+print(frequency.min(), frequency.max())
 index = np.argmax(absDataFFT)
 freq = frequency[index]
 freqHerz = abs(freq * framerate)
 print(freqHerz)
 print (fundamental)
-# print (frequency)
+print (frequency)
 # plt.plot(frequency)
 # plt.ylabel('some numbers')
 # plt.show()
