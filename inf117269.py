@@ -37,13 +37,32 @@ def readWaveFile(fileName):
 #     # Convert to equivalent frequency
 #     return fs * true_i / len(windowed)
 
+# fileName = "train/001_K.wav"
 fileName = sys.argv[1]
-data, channels, sampwidth, framerate, framesNumber = readWaveFile(fileName)
+data, channels, sampwidth, sampling_rate, samples_count = readWaveFile(fileName)
 
+
+samples_count = len(data)
+x = np.linspace(0,samples_count,samples_count,endpoint=False)
+duration = float(samples_count) / sampling_rate
+# plt.subplot(211)
+# plt.plot(x[1000:1020],signal[1000:1020],'*')
+# plt.show()
+data = data * signal.kaiser(samples_count, 100)
+
+spectrum = np.log(abs(np.fft.rfft(data)))
+hps = copy(spectrum)
+for h in np.arange(2, 6):
+    dec = signal.decimate(spectrum, int(h))
+    hps[:len(dec)] += dec
+peak_start = 50 * duration
+peak = np.argmax(hps[peak_start:])
+fundamental = (peak_start + peak) / duration
+print(fundamental)
 # indices = find((data[1:] >= 0) & (data[:-1] < 0))
 # crossings = [i - data[i] / (data[i+1] - data[i]) for i in indices]
 # print (framerate / np.mean(np.diff(crossings)))
-time = framesNumber / framerate
+# time = framesNumber / framerate
 
 # print (len(data))
 # print (channels)
@@ -57,11 +76,11 @@ time = framesNumber / framerate
 # print (freq)
 
 #
-data = data * signal.kaiser(framesNumber,100)
-
-dataFFT = np.fft.fft(data)
-absDataFFT = np.abs(dataFFT)
-maxAmplitude = np.amax(absDataFFT)
+# data = data * signal.kaiser(framesNumber,100)
+#
+# dataFFT = np.fft.fft(data)
+# absDataFFT = np.abs(dataFFT)
+# maxAmplitude = np.amax(absDataFFT)
 # spectrum = np.log(np.abs(np.fft.rfft(data)))
 #
 # hps = copy(spectrum)
@@ -73,12 +92,12 @@ maxAmplitude = np.amax(absDataFFT)
 # peak = np.argmax(hps[peak_start:])
 # fundamental = (peak_start + peak) / duration
 
-frequency = np.fft.fftfreq(framesNumber)
+# frequency = np.fft.fftfreq(framesNumber)
 # print(frequency.min(), frequency.max())
-index = np.argmax(absDataFFT)
-freq = frequency[index]
-freqHerz = abs(freq * framerate)
-print(freqHerz)
+# index = np.argmax(absDataFFT)
+# freq = frequency[index]
+# freqHerz = abs(freq * framerate)
+# print(freqHerz)
 # print (fundamental)
 # print (frequency)
 # plt.plot(frequency)
