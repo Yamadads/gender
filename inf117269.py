@@ -16,12 +16,12 @@ def readWaveFile(fileName):
     data = struct.unpack("%dh" %  channels*framesNumber, frames)
     oneChannelData = data[::channels]
     oneChannelData = list(chain(oneChannelData))
+    max = np.argmax(oneChannelData)
     framesNumber = len(oneChannelData)
     waveFile.close()
     return oneChannelData, channels, sampWidth, frameRate, framesNumber
 
 def getFreq(data,framesNumber,frameRate):
-    # x = np.linspace(0,framesNumber,framesNumber,endpoint=False)
     duration = float(framesNumber) / frameRate
     data = data * signal.kaiser(framesNumber, 100)
     spectrum = np.log(abs(np.fft.rfft(data)))
@@ -38,7 +38,7 @@ def decision():
     fileName = sys.argv[1]
     data, channels, sampwidth, frameRate, framesNumber = readWaveFile(fileName)
     freq = getFreq(data, framesNumber, frameRate)
-    print (freq)
+    # print (freq)
     if freq>185:
         print ('K')
     else:
