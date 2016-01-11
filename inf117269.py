@@ -4,7 +4,8 @@ import struct
 from scipy import signal
 import numpy as np
 from itertools import chain
-from copy import copy
+from numpy import *
+from scipy import *
 
 def readWaveFile(fileName):
     waveFile = wave.open(fileName,'r')
@@ -21,23 +22,24 @@ def readWaveFile(fileName):
     return oneChannelData, channels, sampWidth, frameRate, framesNumber
 
 def getFreq(data,framesNumber,frameRate):
-    duration = float(framesNumber) / frameRate
+    time = float(framesNumber) / frameRate
     data = data * signal.nuttall(framesNumber)
-    spectrum = np.log(abs(np.fft.rfft(data)))
-    hps = copy(spectrum)
+    dataFFT = fft(data)
+    absFFT = abs(dataFFT)
+    logAbsFFT = np.log(absFFT)
+    hps = copy(logAbsFFT)
     for h in np.arange(2, 6):
-        dec = signal.decimate(spectrum, int(h))
-        hps[:len(dec)] += dec
-    peak_start = 50 * duration
-    peak = np.argmax(hps[peak_start:])
-    fundamental = (peak_start + peak) / duration
+        decim = signal.decimate(logAbsFFT, int(h))
+        hps[:len(decim)] += decim
+    start = 150
+    peak = np.argmax(hps[start::])
+    fundamental = ((start+peak)/time)
     return fundamental
 
 def decision():
     fileName = sys.argv[1]
     data, channels, sampwidth, frameRate, framesNumber = readWaveFile(fileName)
     freq = getFreq(data, framesNumber, frameRate)
-    # print (freq)
     if freq>170:
         print ('K')
     else:
